@@ -44,6 +44,29 @@ Spider.g.addEdge = function(edge) {
     }
 }
 
+Spider.Q = {}
+
+Spider.query = function(graph) {
+    let query = Object.create( Spider.Q )
+
+    query.graph = graph
+    query.state = []
+    query.program = []
+    query.gremlins = []
+}
+
+Spider.Q.add = function(pipetype, args) {
+    let step = [pipetype, args]
+    this.program.push(step)
+    return this
+}
+
+Spider.Q.v = function() {
+    var query = Spider.query(this)
+    query.add('vertex', [].slice.call(arguments))
+    return query
+}
+
 Spider.error = function(msg) {
     console.log(msg)
     return false
