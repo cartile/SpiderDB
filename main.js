@@ -33,3 +33,18 @@ Spider.G.addVertex = function(vertex) {
     vertex._in = []
     return vertex._id
 }
+
+Spider.g.addEdge = function(edge) {
+    edge._in = this.findVertexById(edge._in)
+    edge._out = this.findVertexById(edge._out)
+
+    if(!(edge._in && edge._out)) {
+        return Spider.error("That edge's " + (edge._in ? 'out' : 'in')
+                                       + " vertex wasn't found")
+    }
+}
+
+Spider.error = function(msg) {
+    console.log(msg)
+    return false
+  }
