@@ -131,13 +131,43 @@ Spider.addPipetype('unique', function(graph, args, gremlin, state) {
     return gremlin
 })
 
+Spider.addPipetype('filter', function(graph, args, gremlin, state) {
+    if(!gremlin) return 'pull'
+
+    if(typeof args[0] == 'object') {
+        return Spider.objectFilter(gremlin.vertex, args[0]) ? gremlin : 'pull'
+    }
+    
+    if(typeof args[0] != 'function') {
+        Spider.error('Filter is not a function' + args[0])
+        return gremlin
+    }
+
+    if(!args[0](gremlin.vertex, gremlin)) {
+        return 'pull'
+    }
+    return gremlin
+})
+
+Spider.addPipetype('take', function(graph, args, gremlin, state) {
+    state.taken = state.taken || 0
+
+    if(state.taken == args[0]) {
+        state.taken = 0
+        return 'done'
+    }
+
+    if(!gremlin) return 'pull'
+    state.taken++
+    return gremlin
+})
 
 Spider.addPipetype('except', function(graph, args, gremlin, state) { // unfinished
     if(!gremlin) return 'pull'
     if(gremlin.vertex)
 })
 
-Spider.error = function(msg) {
-    console.log(msg)
+Spider.error = function(msg) { 
+    console.log(msg) // when showing few results is preferred, override this to throw an error
     return false
   }
