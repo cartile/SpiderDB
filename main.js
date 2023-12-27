@@ -118,6 +118,20 @@ Spider.simpleTraversal = function(dir) {
     }
 }
 
+Spider.addPipetype('property', function(graph, args, gremlin, state) {
+    if(!gremlin) return 'pull'
+    gremlin.result = gremlin.vertex[args[0]]
+    return gremlin.result == null ? false : gremlin
+})
+
+Spider.addPipetype('unique', function(graph, args, gremlin, state) {
+    if(!gremlin) return 'pull'
+    if(state[gremlin.vertex._id]) return 'pull'
+    state[gremlin.vertex._id] = true
+    return gremlin
+})
+
+
 Spider.addPipetype('except', function(graph, args, gremlin, state) { // unfinished
     if(!gremlin) return 'pull'
     if(gremlin.vertex)
