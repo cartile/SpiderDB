@@ -162,9 +162,36 @@ Spider.addPipetype('take', function(graph, args, gremlin, state) {
     return gremlin
 })
 
+Spider.addPipetype('as', function(graph, args, gremlin, state) {
+    if(!gremlin) return 'pull'
+    gremlin.state.as = gremlin.state.as || {}
+    gremlin.state.as[args[0]] = gremlin.vertex
+    return gremlin
+})
+
+Spider.addPipetype('merge', function(graph, args, gremlin, state) {
+  if(!state.vertices && !gremlin) return 'pull'               // query initialization
+
+  if(!state.vertices || !state.vertices.length) {             // state initialization
+    var obj = (gremlin.state||{}).as || {}
+    state.vertices = args.map(function(id) {return obj[id]}).filter(Boolean)
+  }
+
+  if(!state.vertices.length) return 'pull'                    // done with this batch
+
+  var vertex = state.vertices.pop()
+  return Spider.makeGremlin(vertex, gremlin.state)
+})
+
 Spider.addPipetype('except', function(graph, args, gremlin, state) { // unfinished
     if(!gremlin) return 'pull'
-    if(gremlin.vertex)
+    if(gremlin.vertex == gremlin.state.as[args[0]]) return 'pull'
+    return gremlin
+})
+
+Spider.addPipetype('back', function(graph, args, gremlin, state) {
+  if(!gremlin) return 'pull'                                  // query initialization
+  return Spider.gotoVertex(gremlin, gremlin.state.as[args[0]])
 })
 
 Spider.error = function(msg) { 
