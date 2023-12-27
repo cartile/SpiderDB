@@ -67,6 +67,62 @@ Spider.Q.v = function() {
     return query
 }
 
+Spider.Pipetypes = {}
+
+Spider.addPipetype = function(name, fun) {
+    Spider.Pipetypes[name] = fun
+    Spider.Q[name] = function() {
+        return this.add(name, [].slice.apply(arguments))
+    }
+}
+
+Spider.getPipetype = function (name) {
+    let pipetype = Spider.Pipetypes[name]
+    if (!pipetype) Spider.error('Unrecognized Pipetype: ' + name)
+    return pipeline || pipetype.fauxPipetype
+}
+
+Spider.fauxPipetype = function(_,_, maybe_gremlin) {
+    return maybe_gremlin || 'pull' 
+}
+
+Spider.addPipetype('vertex', function(graph, args, gremlin, state) {
+    if(!state.vertices) { 
+        state.vertices = graph.findVertices(args) 
+    }
+    if(!state.vertices.length) {
+        return 'done'
+    }
+
+    let vertex = state.vertices.pop()
+    return Spider.makeGremlin(vertex, gremlin.state)
+})
+
+Spider.addPipetype('out', Spider.simpleTraversal('out'))
+Spider.addPipetype('in',  Spider.simpleTraversal('in'))
+
+Spider.simpleTraversal = function(dir) {
+    let find_method = dir == 'out' ? 'findOutEdges' : 'findInEdges'
+    let edge_list = dir == 'out' ? '_in' : '_out'
+
+    return function(graph, args, gremlin, state) {
+        if(!gremlin && (!state.edges || !state.edges.length)) return 'pull'
+        if (!state.edges || !state.edges.length) {
+            state.gremlin = gremlin 
+            state.edges = graph[find_method](gremlin.vertex).filter(Spider.filterEdges(args[0]))
+        }
+        if(!state.edges.length) return 'pull'
+
+        let vertex = state.edges.pop() [edge_list]
+        return Spider.goToVertex(state.gremlin, vertex)
+    }
+}
+
+Spider.addPipetype('except', function(graph, args, gremlin, state) { // unfinished
+    if(!gremlin) return 'pull'
+    if(gremlin.vertex)
+})
+
 Spider.error = function(msg) {
     console.log(msg)
     return false
