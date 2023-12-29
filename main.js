@@ -194,6 +194,21 @@ Spider.addPipetype('back', function(graph, args, gremlin, state) {
   return Spider.gotoVertex(gremlin, gremlin.state.as[args[0]])
 })
 
+Spider.makeGremlin = function(vertex, state) {
+    return {vertex: vertex, state: state || {}}
+}
+
+Spider.goToVertex = function(gremlin, vertex) {
+    return Dagoba.makeGremlin(vertex, gremlin.state)
+}
+
+Spider.G.findVertices = function(args) {
+    if(typeof args[0] == 'object') return this.searchVertices(args[0])
+    else if (args.length == 0) return this.vertices.slice()
+    else return this.findVerticesByIds(args)
+}
+
+
 Spider.error = function(msg) { 
     console.log(msg) // when showing few results is preferred, override this to throw an error
     return false
